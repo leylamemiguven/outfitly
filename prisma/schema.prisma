@@ -21,14 +21,10 @@ model Product {
   productUrl  String?
   imageUrl    String
   inStock     Boolean   @default(true)
-  sizes       String?     // JSON string
-  colorLab    String      // JSON string of [{L,a,b,weight}]
-  attributes  String?     // JSON string
 
-  // Store JSON-ish structures as strings for max connector compatibility
-  sizes       String?     // JSON string
-  colorLab    String      // JSON string of [{L,a,b,weight}]
-  attributes  String?     // JSON string
+  sizes       String?     // <-- String? not Json
+  colorLab    String      // <-- String  not Json
+  attributes  String?     // <-- String? not Json
 
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
