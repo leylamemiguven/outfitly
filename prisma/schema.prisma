@@ -6,6 +6,7 @@ generator client {
 }
 
 datasource db {
+  // Use sqlite locally; switch later if you want. (Works with strings for JSON.)
   provider = "sqlite"
   url      = "file:./dev.db"
 }
@@ -20,9 +21,15 @@ model Product {
   productUrl  String?
   imageUrl    String
   inStock     Boolean   @default(true)
-  sizes       Json?
-  colorLab    Json      // [{ L: number, a: number, b: number, weight: number }]
-  attributes  Json?
+  sizes       String?     // JSON string
+  colorLab    String      // JSON string of [{L,a,b,weight}]
+  attributes  String?     // JSON string
+
+  // Store JSON-ish structures as strings for max connector compatibility
+  sizes       String?     // JSON string
+  colorLab    String      // JSON string of [{L,a,b,weight}]
+  attributes  String?     // JSON string
+
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 }
