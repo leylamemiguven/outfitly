@@ -1,103 +1,90 @@
 import Image from "next/image";
 
-export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+'use client';
+import { useState } from 'react';
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+type Swatch = { hex: string; weight: number };
+type Product = {
+  id: string; title: string; brand?: string; category?: string;
+  imageUrl: string; priceCents: number; currency: string;
+  match?: { colorScore: number };
+};
+
+export default function Home() {
+  const [swatches, setSwatches] = useState<Swatch[]>([
+    { hex: '#7e9a6c', weight: 0.5 }, { hex: '#e8dfc8', weight: 0.5 }
+  ]);
+  const [tolerance, setTolerance] = useState(20);
+  const [loading, setLoading] = useState(false);
+  const [results, setResults] = useState<Product[]>([]);
+
+  const update = (i: number, key: keyof Swatch, val: string | number) =>
+    setSwatches(prev => prev.map((s, idx) => idx === i ? { ...s, [key]: val } as Swatch : s));
+
+  const add = () => setSwatches(prev => [...prev, { hex: '#888888', weight: 0.3 }]);
+  const remove = (i: number) => setSwatches(prev => prev.filter((_, idx) => idx !== i));
+
+  const search = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch('/api/search/color', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ palette: swatches, tolerance, filters: {} })
+      });
+      const data = await res.json();
+      setResults(data.results);
+    } finally { setLoading(false); }
+  };
+
+  return (
+    <main className="max-w-6xl mx-auto p-6">
+      <h1 className="text-3xl font-semibold mb-4">ChromaFit — Color Search (MVP)</h1>
+
+      <div className="rounded-2xl bg-white shadow p-4 mb-6">
+        <h2 className="text-xl font-medium mb-3">Palette</h2>
+        <div className="space-y-3">
+          {swatches.map((s, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <input type="color" value={s.hex}
+                onChange={e => update(i, 'hex', e.target.value)}
+                className="h-10 w-16 border rounded"/>
+              <input type="text" value={s.hex}
+                onChange={e => update(i, 'hex', e.target.value)}
+                className="px-2 py-1 border rounded w-28"/>
+              <label className="text-sm">Weight</label>
+              <input type="number" step="0.1" min={0} max={1} value={s.weight}
+                onChange={e => update(i, 'weight', parseFloat(e.target.value))}
+                className="px-2 py-1 border rounded w-24"/>
+              <button onClick={() => remove(i)} className="ml-auto text-sm text-red-600">Remove</button>
+            </div>
+          ))}
+          <div className="flex items-center gap-4">
+            <button onClick={add} className="px-3 py-2 rounded bg-neutral-900 text-white">Add swatch</button>
+            <label className="text-sm">Tolerance (ΔE2000): {tolerance}</label>
+            <input type="range" min={5} max={40} value={tolerance}
+              onChange={e => setTolerance(parseInt(e.target.value))}/>
+            <button onClick={search} className="ml-auto px-4 py-2 rounded bg-blue-600 text-white">Search</button>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+
+      {loading && <p>Searching…</p>}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        {results.map(p => (
+          <div key={p.id} className="bg-white rounded-2xl shadow overflow-hidden">
+            <img src={p.imageUrl} alt={p.title} className="w-full h-56 object-cover"/>
+            <div className="p-3">
+              <div className="text-sm text-neutral-500">{p.brand} {p.category && `• ${p.category}`}</div>
+              <div className="font-medium">{p.title}</div>
+              <div className="text-sm mt-1">{(p.priceCents/100).toFixed(2)} {p.currency}</div>
+              {p.match && <div className="text-xs text-neutral-500 mt-1">
+                Match: color {Math.round(p.match.colorScore*100)}%
+              </div>}
+            </div>
+          </div>
+        ))}
+      </div>
+    </main>
   );
 }

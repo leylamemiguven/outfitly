@@ -1,0 +1,28 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  title       String
+  brand       String?
+  category    String?
+  priceCents  Int       @default(0)
+  currency    String    @default("USD")
+  productUrl  String?
+  imageUrl    String
+  inStock     Boolean   @default(true)
+  sizes       Json?
+  colorLab    Json      // [{ L: number, a: number, b: number, weight: number }]
+  attributes  Json?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
